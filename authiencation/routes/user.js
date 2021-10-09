@@ -4,12 +4,15 @@ const {
   signIn,
   verifyEmail,
   forgotPassword,
+  resetPassword,
 } = require("../controllers/user");
+const { isTokenValid } = require("../middleware/user");
 const { validatorUser, validate } = require("../middleware/validator");
 
 router.post("/create", validatorUser, validate, createUser);
 router.post("/signin", signIn);
 router.post("/verified-email", verifyEmail);
 router.post("/forgot-password", forgotPassword);
+router.post("/reset-password", isTokenValid, resetPassword);
 
 module.exports = router;

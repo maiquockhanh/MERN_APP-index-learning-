@@ -113,7 +113,7 @@ const forgotPassword = async (req, res) => {
     from: "verification@email.com",
     to: user.email,
     subject: "Reset password",
-    html: `<a href="http://localhost:4000/api/user/resetpass/?token=${newToken}&id=${user._id}">Click here to reset password</a>`,
+    html: `<a href="http://localhost:4000/api/user/reset-password/?token=${newToken}&id=${user._id}">Click here to reset password</a>`,
   });
 
   res.json({
@@ -122,6 +122,37 @@ const forgotPassword = async (req, res) => {
   });
 };
 
-const resetPassword = async (req, res) => {};
+const resetPassword = async (req, res) => {
+  const { password } = req.body;
 
-module.exports = { createUser, signIn, verifyEmail, forgotPassword };
+  const user = await User.findById(req.user._id);
+  if (!user) sendError(res, "User not found");
+
+  const isMatchedPass = await user.comparePassword(password);
+  if (isMatchedPass) return sendError(res, "This is the previous pass");
+
+  if (password.trim().length < 8 || password.trim().length > 20)
+    return sendError(res, "Password length must be between 8 and 20");
+
+  user.password = password.trim();
+  await user.save();
+
+  await ResetToken.findOneAndDelete({ owner: user._id });
+
+  transport().sendMail({
+    from: "verification@email.com",
+    to: user.email,
+    subject: "Reset password",
+    html: `Your password has been changed`,
+  });
+
+  res.json({ success: true, message: "Your password has been changed" });
+};
+
+module.exports = {
+  createUser,
+  signIn,
+  verifyEmail,
+  forgotPassword,
+  resetPassword,
+};
