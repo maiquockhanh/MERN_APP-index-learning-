@@ -14,5 +14,8 @@ router.post("/signin", signIn);
 router.post("/verified-email", verifyEmail);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", isTokenValid, resetPassword);
+router.get("/verified-token", isTokenValid, (req, res) => {
+  res.json({ success: true });
+});
 
 module.exports = router;
